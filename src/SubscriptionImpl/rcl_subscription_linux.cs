@@ -4,7 +4,7 @@ namespace rclcs
 {
 	internal class rcl_subscription_linux:rcl_subscription_base,IDisposable
 	{
-
+	    private IntPtr ResponsePtr;
 		public rcl_subscription_linux(Node _node, rosidl_message_type_support_t _type_support, string _topic_name, rcl_subscription_options_t _options):base(_node,_type_support,_topic_name,_options)
 		{
 			subscription = rcl_get_zero_initialized_subscription ();
@@ -30,11 +30,14 @@ namespace rclcs
 
 		{
 			MessageWrapper ret_msg = new T();
-			ValueType msg;
-			ret_msg.GetData (out msg);
+		    if (ResponsePtr != IntPtr.Zero)
+		        Marshal.FreeHGlobal(ResponsePtr);
+
+		    ResponsePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+            ret_msg.GetData (ResponsePtr);
 			rmw_message_info_t message_info = _message_info;
 
-			int ret = rcl_take (ref subscription,  msg, message_info);
+			int ret = rcl_take (ref subscription, ResponsePtr, message_info);
 
 			RCLReturnValues ret_val = (RCLReturnValues)ret;
 			//Console.WriteLine (ret_val);
@@ -68,7 +71,7 @@ namespace rclcs
 				{
 					take_message_success = true;
 					//Bring the data back into the message wrapper
-					ret_msg.SetData (ref msg);
+					ret_msg.SetData (ResponsePtr);
 					//And do a sync for nested types. This is in my opinion a hack because I can't store references on value types in C#
 					ret_msg.SyncDataIn ();
 

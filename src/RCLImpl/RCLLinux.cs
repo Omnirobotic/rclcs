@@ -17,7 +17,7 @@ namespace rclcs
 		/// </summary>
 		/// <param name="args">Commandline arguments</param>
 		/// <exception cref="RCLAlreadInitExcption">In case rcl was alread initialised</exception>
-		public override void Init(String[] args)
+		public override rcl_context_t Init(String[] args)
 		{
 			if (args == null)
 				throw new ArgumentNullException ();
@@ -36,6 +36,8 @@ namespace rclcs
 				break;
 			}
 
+            // TODO_UV : Temporary fix to see if returning context solves the windows issues.
+            return new rcl_context_t();
 		}
 		/// <summary>
 		/// This method does the initilisation of the ros client lib
@@ -44,7 +46,7 @@ namespace rclcs
 		/// </summary>
 		/// <param name="args">Arguments.</param>
 		/// <param name="custom_allocator">Custom allocator.</param>
-		public  override void Init(String[] args, rcl_allocator_t custom_allocator)
+		public  override rcl_context_t Init(String[] args, rcl_allocator_t custom_allocator)
 		{
 			if (args == null)
 				throw new ArgumentNullException ();
@@ -63,6 +65,8 @@ namespace rclcs
 				break;
 			}
 
+		    // TODO_UV : Temporary fix to see if returning context solves the windows issues.
+            return new rcl_context_t();
 		}
 		/// <summary>
 		/// Gets a value indicating whether there was a Init call in the past.

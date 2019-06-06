@@ -61,7 +61,7 @@ namespace rclcs
 		public rcl_service(rcl_node_t _node, rosidl_service_type_support_t typesupport, string service_name, rcl_service_options_t options)
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				//TODO codepath for windows
+				Impl = new rcl_service_linux (_node, typesupport, service_name, options);
 			} else if (Environment.OSVersion.Platform == PlatformID.Unix) {
 				Impl = new rcl_service_linux (_node, typesupport, service_name, options);
 			} else {

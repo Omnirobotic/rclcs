@@ -67,8 +67,11 @@ namespace rclcs
 		public rcl_client(rcl_node_t _node, rosidl_service_type_support_t _typesupport,  string _service_name, rcl_client_options_t _options)
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				//TODO codepath for windows
-			} else if (Environment.OSVersion.Platform == PlatformID.Unix) {
+                //TODO codepath for windows
+			    Console.WriteLine("Avant new rcl_client_linux");
+                Impl = new rcl_client_linux(_node, _typesupport, _service_name, _options);
+			    Console.WriteLine("Apres new rcl_client_linux");
+            } else if (Environment.OSVersion.Platform == PlatformID.Unix) {
 				Impl = new rcl_client_linux (_node,_typesupport,_service_name,_options);
 			} else {
 				throw new Exception("Operating system: " +Environment.OSVersion.Platform.ToString() + " not supported");

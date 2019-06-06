@@ -23,10 +23,10 @@ namespace rclcs
 		/// </summary>
 		/// <param name="_Name">Name.</param>
 		/// <param name="_Namespace">Namespace.</param>
-		public Node (string _Name, string _Namespace = "")
+		public Node (string _Name, rcl_context_t context, string _Namespace = "")
 		{
 			//Create a rcl_node which is a wrapper of the native methods
-			InternalNode = new rcl_node(_Name,_Namespace);
+			InternalNode = new rcl_node(_Name, context, _Namespace);
 			Name = _Name;
 		}
 

@@ -5,8 +5,8 @@ namespace rclcs
 	internal abstract class RCLBase:IDisposable
 	{
 		protected bool disposed = false;
-		public  abstract void Init (String[] args);
-		public  abstract void Init(String[] args, rcl_allocator_t custom_allocator);
+		public  abstract rcl_context_t Init (String[] args);
+		public  abstract rcl_context_t Init(String[] args, rcl_allocator_t custom_allocator);
 		public  abstract bool IsInit{ get;}
 
 		/// <summary>
@@ -68,13 +68,13 @@ namespace rclcs
             Dispose(false);
         }
 
-		public void Init (String[] args)
+		public rcl_context_t Init (String[] args)
 		{
-			Impl.Init (args);
+			return Impl.Init (args);
 		}
-		public void Init(String[] args, rcl_allocator_t custom_allocator)
+		public rcl_context_t Init(String[] args, rcl_allocator_t custom_allocator)
 		{
-			Impl.Init (args, custom_allocator);
+			return Impl.Init (args, custom_allocator);
 		}
 		public bool IsInit
 		{

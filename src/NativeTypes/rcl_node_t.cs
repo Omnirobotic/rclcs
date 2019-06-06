@@ -11,6 +11,7 @@ namespace rclcs
 	public struct rcl_node_t
 	{
 		public IntPtr impl;
+	    public IntPtr context;
 	}
 
 	/// <summary>
@@ -20,5 +21,7 @@ namespace rclcs
 	{
 		public UIntPtr domain_id;
 		public rcl_allocator_t allocator;
+	    public byte use_global_arguments;
+        public rcl_arguments_t arguments;
 	}
 }

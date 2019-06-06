@@ -43,7 +43,7 @@ namespace rclcs
 
 				if (item.IsStatic ) {
 					
-					if (item.Name.Contains ("rosidl_typesupport_introspection_c__get_service_type_support_handle__")) {
+					if (item.Name.Contains ("rosidl_typesupport_fastrtps_c__get_service_type_support_handle__")) {
 						foundMethod = true;
 						TypeSupport = (rosidl_service_type_support_t)Marshal.PtrToStructure((IntPtr)item.Invoke (null, null),typeof(rosidl_service_type_support_t));
 					}
@@ -55,8 +55,10 @@ namespace rclcs
 				throw new Exception ("Couldn't get typesupport");
 			ClientOptions = rcl_client.get_default_options ();
 			ClientOptions.qos = QOSProfile;
+            Console.WriteLine("Avant new rcl_client");
 			InternalClient = new rcl_client (RosNode.NativeNode, TypeSupport, ServiceName, ClientOptions);
-		}
+		    Console.WriteLine("Apres new rcl_client");
+        }
 		public override void Execute ()
 		{
 			bool success = false;
@@ -99,5 +101,14 @@ namespace rclcs
 
 	}
 
+    public struct Test
+    {
+        private IntPtr Data;
+
+        void Init()
+        {
+            Data = IntPtr.Zero;
+        }
+    }
 }
 

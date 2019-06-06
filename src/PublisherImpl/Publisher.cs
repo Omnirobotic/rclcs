@@ -13,8 +13,10 @@ namespace rclcs
 	public class Publisher<T>:Executable
 		where T: MessageWrapper, new()
 	{
-		//The c-message-type-support that is obtained for the given message type
-		private rosidl_message_type_support_t TypeSupport;
+	    private IntPtr PublishPtr;
+
+        //The c-message-type-support that is obtained for the given message type
+        private rosidl_message_type_support_t TypeSupport;
 		//The instance of the wrapper object around the native methods
 		private rcl_publisher InternalPublisher;
 		//For the IDisposable pattern
@@ -91,7 +93,7 @@ namespace rclcs
 			foreach (var item in messageType.GetMethods()) {
 				if (item.IsStatic) {
 					//We search for the method that does the native call
-					if (item.Name.Contains ("rosidl_typesupport_introspection_c__get_message_type_support_handle")) {
+					if (item.Name.Contains ("rosidl_typesupport_fastrtps_c__get_message_type_support_handle")) {
 						foundMethod = true;
 						//We call it and marshal the returned IntPtr (a managed wrapper around a pointer) to the managed typesupport struct
 						TypeSupport = (rosidl_message_type_support_t)Marshal.PtrToStructure ((IntPtr)item.Invoke (null, null), typeof(rosidl_message_type_support_t));
@@ -142,9 +144,13 @@ namespace rclcs
 				throw new ArgumentNullException ("msg may not be null");
 			//This is needed for nested types, mostly because we can't store a reference to a value type in C#
 			msg.SyncDataOut ();
-			ValueType temp;
-			//We get the data out of the message wrapper
-			msg.GetData (out temp);
+
+		    if (PublishPtr != IntPtr.Zero)
+		        Marshal.FreeHGlobal(PublishPtr);
+
+		    PublishPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+            //We get the data out of the message wrapper
+            msg.GetData (PublishPtr);
 
 
 			/*Console.WriteLine ("##############################################");
@@ -163,7 +169,8 @@ namespace rclcs
 			Console.WriteLine ("##############################################");*/
 
 			//And the the native wrapper to publish the message struct
-			return InternalPublisher.PublishMessage (temp);
+
+			return InternalPublisher.PublishMessage (PublishPtr);
 		}
 
 		/// <summary>

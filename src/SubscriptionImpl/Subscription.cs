@@ -49,7 +49,7 @@ namespace rclcs
 
 				if (item.IsStatic ) {
 					
-					if (item.Name.Contains ("rosidl_typesupport_introspection_c__get_message_type_support_handle")) {
+					if (item.Name.Contains ("rosidl_typesupport_fastrtps_c__get_message_type_support_handle")) {
 						foundMethod = true;
 						TypeSupport = (rosidl_message_type_support_t)Marshal.PtrToStructure((IntPtr)item.Invoke (null, null),typeof(rosidl_message_type_support_t));
 					}

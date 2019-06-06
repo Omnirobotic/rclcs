@@ -4,12 +4,19 @@ namespace rclcs
 {
 	internal class rcl_service_linux:rcl_service_base,IDisposable
 	{
+	    private IntPtr RequestPtr;
+	    private IntPtr ResponsePtr;
 
-		public rcl_service_linux(rcl_node_t _node, rosidl_service_type_support_t typesupport, string service_name, rcl_service_options_t options):base(_node,typesupport, service_name, options)
+	    private readonly object _lock = new object();
+
+        public rcl_service_linux(rcl_node_t _node, rosidl_service_type_support_t typesupport, string service_name, rcl_service_options_t options):base(_node,typesupport, service_name, options)
 		{
 
 			native_handle = rcl_get_zero_initialized_service ();
 			int ret = rcl_service_init (ref native_handle,ref native_node, ref typesupport, service_name, ref options);
+
+            Console.WriteLine($"rcl_service_init returned: {ret}");
+
 			RCLReturnValues retVal = (RCLReturnValues)ret;
 			switch (retVal) {
 			case RCLReturnValues.RCL_RET_OK:
@@ -46,9 +53,9 @@ namespace rclcs
 				//
 			}
 			rcl_service_fini (ref native_handle, ref native_node);
-			// Free any unmanaged objects here.
-			//
-			disposed = true;
+            // Free any unmanaged objects here.
+		    //
+            disposed = true;
 		}
 
 		public override T TakeRequest<T> (ref bool success)
@@ -56,56 +63,74 @@ namespace rclcs
 
 			success = false;
 			last_request_header = new rmw_request_id_t ();
-			T request = new T ();
-			ValueType msg;
-			request.GetData (out msg);
-			int ret = rcl_take_request (ref native_handle, ref last_request_header, msg);
-			RCLReturnValues retVal = (RCLReturnValues)ret;
-			switch (retVal) {
-			case RCLReturnValues.RCL_RET_OK:
-				success = true;
-				request.SetData (ref msg);
-				break;
-			case RCLReturnValues.RCL_RET_INVALID_ARGUMENT:
-				//throw new RCLInvalidArgumentException();
-				break;
-			case RCLReturnValues.RCL_RET_SERVICE_INVALID:
-				throw new RCLServiceInvalidException ();
 
-			case RCLReturnValues.RCL_RET_BAD_ALLOC:
-				throw new RCLBadAllocException ();
+		    lock (_lock)
+		    {
+		        if (RequestPtr != IntPtr.Zero)
+		            Marshal.FreeHGlobal(RequestPtr);
 
-			case RCLReturnValues.RCL_RET_ERROR:
-				success = false;
-				break;
-			default:
-				break;
-			}
-			return request;
+		        RequestPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+
+		        T request = new T();
+		        request.GetData(RequestPtr);
+		        int ret = rcl_take_request(ref native_handle, ref last_request_header, RequestPtr);
+		        RCLReturnValues retVal = (RCLReturnValues) ret;
+		        switch (retVal)
+		        {
+		            case RCLReturnValues.RCL_RET_OK:
+		                success = true;
+		                request.SetData(RequestPtr);
+		                request.PrintValue();
+		                break;
+		            case RCLReturnValues.RCL_RET_INVALID_ARGUMENT:
+		                //throw new RCLInvalidArgumentException();
+		                break;
+		            case RCLReturnValues.RCL_RET_SERVICE_INVALID:
+		                throw new RCLServiceInvalidException();
+
+		            case RCLReturnValues.RCL_RET_BAD_ALLOC:
+		                throw new RCLBadAllocException();
+
+		            case RCLReturnValues.RCL_RET_ERROR:
+		                success = false;
+		                break;
+		            default:
+		                break;
+		        }
+
+		        return request;
+		    }
 		}
 
 		public override void SendResponse<T>( T response)
 		{
-			ValueType msg;
-			response.GetData (out msg);
-			int ret = rcl_send_response (ref native_handle, ref last_request_header, msg);
-			RCLReturnValues retVal = (RCLReturnValues)ret;
-			switch (retVal) {
-			case RCLReturnValues.RCL_RET_OK:
-				return;
+		    lock (_lock)
+		    {
+		        if (ResponsePtr != IntPtr.Zero)
+		            Marshal.FreeHGlobal(ResponsePtr);
 
-			case RCLReturnValues.RCL_RET_INVALID_ARGUMENT:
-				throw new RCLInvalidArgumentException();
+		        ResponsePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+		        response.GetData(ResponsePtr);
+		        int ret = rcl_send_response(ref native_handle, ref last_request_header, ResponsePtr);
+		        RCLReturnValues retVal = (RCLReturnValues) ret;
+		        switch (retVal)
+		        {
+		            case RCLReturnValues.RCL_RET_OK:
+		                return;
 
-			case RCLReturnValues.RCL_RET_SERVICE_INVALID:
-				throw new RCLServiceInvalidException ();
+		            case RCLReturnValues.RCL_RET_INVALID_ARGUMENT:
+		                throw new RCLInvalidArgumentException();
 
-			case RCLReturnValues.RCL_RET_ERROR:
-				throw new RCLErrorException ();
+		            case RCLReturnValues.RCL_RET_SERVICE_INVALID:
+		                throw new RCLServiceInvalidException();
 
-			default:
-				break;
-			}
+		            case RCLReturnValues.RCL_RET_ERROR:
+		                throw new RCLErrorException();
+
+		            default:
+		                break;
+		        }
+		    }
 		}
 		public static rcl_service_options_t get_default_options()
 		{
@@ -124,10 +149,10 @@ namespace rclcs
 		extern static rcl_service_options_t rcl_service_get_default_options();
 
 		[DllImport(RCL.LibRCLPath)]
-		extern static int rcl_take_request(ref rcl_service_t service, ref rmw_request_id_t request_header, [In,Out] ValueType ros_request);
+		extern static int rcl_take_request(ref rcl_service_t service, ref rmw_request_id_t request_header, IntPtr ros_request);
 
 		[DllImport(RCL.LibRCLPath)]
-		extern static int rcl_send_response(ref rcl_service_t service, ref rmw_request_id_t request_header, [In,Out] ValueType ros_response);
+		extern static int rcl_send_response(ref rcl_service_t service, ref rmw_request_id_t request_header, IntPtr ros_response);
 
 		[DllImport(RCL.LibRCLPath)]
 		extern static string rcl_service_get_service_name(ref rcl_service_t service);

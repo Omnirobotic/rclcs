@@ -14,11 +14,11 @@ namespace rclcs
 		/// </summary>
 		/// <param name="name">Name.</param>
 		/// <param name="namespace_">Namespace.</param>
-		public rcl_node_linux (string name, string namespace_ = ""):base(name,namespace_)
+		public rcl_node_linux (string name, rcl_context_t context, string namespace_ = ""):base(name,namespace_)
 		{
 			rcl_node_t node = rcl_get_zero_initialized_node ();
 			rcl_node_options_t default_options = rcl_node_get_default_options ();
-			int ret = rcl_node_init (ref node, name, namespace_, ref default_options);
+			int ret = rcl_node_init (ref node, name, namespace_, ref context, ref default_options);
 			native_handle = node;
 		}
 		/// <summary>
@@ -78,7 +78,7 @@ namespace rclcs
 		static extern int rcl_node_get_domain_id( ref rcl_node_t  node, ref UIntPtr  domain_id);
 
 		[DllImport("librcl.so")]
-		static extern int rcl_node_init (ref rcl_node_t node, [MarshalAs (UnmanagedType.LPStr)]string name, [MarshalAs(UnmanagedType.LPStr)]string namespace_, ref rcl_node_options_t options);
+		static extern int rcl_node_init (ref rcl_node_t node, [MarshalAs (UnmanagedType.LPStr)]string name, [MarshalAs(UnmanagedType.LPStr)]string namespace_, ref rcl_context_t context, ref rcl_node_options_t options);
 
 		[DllImport("librcl.so")]
 		static extern int rcl_node_fini (ref rcl_node_t node);

@@ -46,12 +46,12 @@ namespace rclcs
 	{
         private bool disposed = false;
 		private rcl_node_base Impl;
-		public rcl_node(string name, string namespace_ = "")
+		public rcl_node(string name, rcl_context_t context, string namespace_ = "")
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-                Impl = new rcl_node_windows(name, namespace_);
+                Impl = new rcl_node_windows(name, context, namespace_);
 			} else if (Environment.OSVersion.Platform == PlatformID.Unix) {
-				Impl = new rcl_node_linux (name,namespace_);
+				Impl = new rcl_node_linux (name, context, namespace_);
 			} else {
 				throw new Exception("Operating system: " +Environment.OSVersion.Platform.ToString() + " not supported");
 			}

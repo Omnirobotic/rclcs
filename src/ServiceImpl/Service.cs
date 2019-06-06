@@ -40,7 +40,7 @@ namespace rclcs
 			foreach (var item in ServiceType.GetMethods()) {
 
 				if (item.IsStatic ) {
-					if (item.Name.Contains ("rosidl_typesupport_introspection_c__get_service_type_support_handle__")) {
+					if (item.Name.Contains ("rosidl_typesupport_fastrtps_c__get_service_type_support_handle__")) {
 						foundMethod = true;
 						TypeSupport = (rosidl_service_type_support_t)Marshal.PtrToStructure((IntPtr)item.Invoke (null, null),typeof(rosidl_service_type_support_t));
 					}
@@ -81,6 +81,7 @@ namespace rclcs
 			bool TakeSuccess = false;
 			T Request = InternalService.TakeRequest<T> (ref TakeSuccess);
 			if (TakeSuccess) {
+                Request.PrintValue();
 				if(RequestRecieved != null)
 					RequestRecieved(this, new ServiceRecievedRequestEventArgs<T,U>(Request,new SendResponseDelegate<U>(InternalService.SendResponse<U>)));
 			}
